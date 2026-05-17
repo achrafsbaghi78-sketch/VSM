@@ -1,4 +1,4 @@
 streamlit
-plotly
+graphviz
 pandas
-streamlit-flow-component
+plotly
