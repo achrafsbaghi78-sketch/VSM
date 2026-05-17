@@ -1,5 +1,4 @@
-   streamlit
-   scikit-learn
-   pandas
-   nltk
-   PyPDF2
+streamlit
+plotly
+pandas
+streamlit-flow-component
