@@ -303,24 +303,12 @@ with tab3:
         if goulot['tc'] > takt:
             gap = goulot['tc'] - takt
             surplus_pct = (goulot['tc']/takt - 1) * 100
-            st.error(f"GOULOT CRITIQUE DETECTE
-
-**{goulot['nom']}**
-- Temps Cycle: **{goulot['tc']}h**
-- Takt Time: **{takt}h**
-- Ecart: **+{gap:.1f}h** ({surplus_pct:.0f}% de surplus)
-
-CAPACITE INSUFFISANTE!")
+            goulot_msg = f"GOULOT CRITIQUE DETECTE - **{goulot['nom']}** - TC: {goulot['tc']}h > Takt: {takt}h - Ecart: +{gap:.1f}h ({surplus_pct:.0f}%)"
+            st.error(goulot_msg)
         else:
             marge = ((takt - goulot['tc'])/takt*100)
-            st.success(f"Capacite Suffisante
-
-**Etape critique: {goulot['nom']}**
-- Temps Cycle: **{goulot['tc']}h**
-- Takt Time: **{takt}h**
-- Marge: **{marge:.0f}%** sous le Takt
-
-La ligne peut suivre la demande")
+            succes_msg = f"Capacite Suffisante - **{goulot['nom']}** - TC: {goulot['tc']}h < Takt: {takt}h - Marge: {marge:.0f}%"
+            st.success(succes_msg)
     with col_b2:
         fig_cap = go.Figure()
         colors = ['#10b981' if tc <= takt else '#f43f5e' for tc in df['tc']]
@@ -361,70 +349,55 @@ La ligne peut suivre la demande")
 with tab4:
     st.markdown("### Rapport Complet VSM")
     report_date = datetime.now().strftime("%d/%m/%Y %H:%M")
-    report_md = f"# Rapport VSM - {cfg['ent_nom']}
-**Date:** {report_date}
-
----
-
-## Resume Executif
-
-| Indicateur | Valeur | Statut |
-|------------|--------|--------|
-| Lead Time Total | {lead_time:.1f}h | {'OK' if lead_time < 10 else 'A ameliorer'} |
-| % Valeur Ajoutee | {pct_va:.1f}% | {'Excellent' if pct_va > 50 else 'A ameliorer'} |
-| TRS Moyen | {trs_moyen:.0f}% | {'Objectif atteint' if trs_moyen >= 85 else 'Sous objectif'} |
-| Takt Time | {takt}h | - |
-| Demande | {demande}/jour | - |
-
----
-
-## Configuration
-
-**Fournisseur:** {cfg['fourn_nom']} ({cfg['fourn_freq']} - {cfg['fourn_mode']})
-**Entreprise:** {cfg['ent_nom']} (ERP: {cfg['ent_erp']})
-**Client:** {cfg['cli_nom']} ({cfg['cli_freq']})
-
----
-
-## Detail des Etapes
-
-| Etape | C/T (h) | C/O (h) | Oper. | TRS % | Stock Av. | Stock Ap. | Lead Time | % VA |
-|-------|---------|---------|-------|-------|-----------|-----------|-----------|------|
-"
+    report_lines = []
+    report_lines.append(f"# Rapport VSM - {cfg['ent_nom']}")
+    report_lines.append(f"**Date:** {report_date}")
+    report_lines.append("")
+    report_lines.append("## Resume Executif")
+    report_lines.append("")
+    report_lines.append("| Indicateur | Valeur | Statut |")
+    report_lines.append("|------------|--------|--------|")
+    report_lines.append(f"| Lead Time Total | {lead_time:.1f}h | {'OK' if lead_time < 10 else 'A ameliorer'} |")
+    report_lines.append(f"| % Valeur Ajoutee | {pct_va:.1f}% | {'Excellent' if pct_va > 50 else 'A ameliorer'} |")
+    report_lines.append(f"| TRS Moyen | {trs_moyen:.0f}% | {'Objectif atteint' if trs_moyen >= 85 else 'Sous objectif'} |")
+    report_lines.append(f"| Takt Time | {takt}h | - |")
+    report_lines.append(f"| Demande | {demande}/jour | - |")
+    report_lines.append("")
+    report_lines.append("## Configuration")
+    report_lines.append("")
+    report_lines.append(f"**Fournisseur:** {cfg['fourn_nom']} ({cfg['fourn_freq']} - {cfg['fourn_mode']})")
+    report_lines.append(f"**Entreprise:** {cfg['ent_nom']} (ERP: {cfg['ent_erp']})")
+    report_lines.append(f"**Client:** {cfg['cli_nom']} ({cfg['cli_freq']})")
+    report_lines.append("")
+    report_lines.append("## Detail des Etapes")
+    report_lines.append("")
+    report_lines.append("| Etape | C/T (h) | C/O (h) | Oper. | TRS % | Stock Av. | Stock Ap. | Lead Time | % VA |")
+    report_lines.append("|-------|---------|---------|-------|-------|-----------|-----------|-----------|------|")
     for _, row in summary.iterrows():
-        report_md += f"| {row['Etape']} | {row['C/T (h)']:.2f} | {row['C/O (h)']:.2f} | {int(row['Oper.'])} | {int(row['TRS %'])}% | {int(row['Stock Av.'])} | {int(row['Stock Ap.'])} | {row['Lead Time']:.2f}h | {row['% VA']:.1f}% |
-"
-    report_md += f"
----
-
-## Analyse du Goulot
-
-**Etape critique:** {goulot['nom']}
-**Temps Cycle:** {goulot['tc']}h
-**Takt Time:** {takt}h
-**Ecart:** {goulot['tc'] - takt:.1f}h
-
-{'La ligne peut suivre la demande' if goulot['tc'] <= takt else 'CAPACITE INSUFFISANTE'}
-
----
-
-## Plan d'Action
-
-"
+        report_lines.append(f"| {row['Etape']} | {row['C/T (h)']:.2f} | {row['C/O (h)']:.2f} | {int(row['Oper.'])} | {int(row['TRS %'])}% | {int(row['Stock Av.'])} | {int(row['Stock Ap.'])} | {row['Lead Time']:.2f}h | {row['% VA']:.1f}% |")
+    report_lines.append("")
+    report_lines.append("## Analyse du Goulot")
+    report_lines.append("")
+    report_lines.append(f"**Etape critique:** {goulot['nom']}")
+    report_lines.append(f"**Temps Cycle:** {goulot['tc']}h")
+    report_lines.append(f"**Takt Time:** {takt}h")
+    report_lines.append(f"**Ecart:** {goulot['tc'] - takt:.1f}h")
+    report_lines.append("")
+    report_lines.append('La ligne peut suivre la demande' if goulot['tc'] <= takt else 'CAPACITE INSUFFISANTE')
+    report_lines.append("")
+    report_lines.append("## Plan d'Action")
+    report_lines.append("")
     if actions:
         for i, action in enumerate(actions, 1):
-            report_md += f"{i}. {action}
-
-"
+            report_lines.append(f"{i}. {action}")
     else:
-        report_md += "Aucune action critique identifiee. Continuer le Kaizen!
-
-"
-    report_md += "
----
-
-*Rapport genere automatiquement par VSM Builder Pro MAX*
-*Base sur les principes Lean et le livre 'Learning to See' de Rother & Shook*"
+        report_lines.append("Aucune action critique identifiee. Continuer le Kaizen!")
+    report_lines.append("")
+    report_lines.append("---")
+    report_lines.append("")
+    report_lines.append("*Rapport genere automatiquement par VSM Builder Pro MAX*")
+    report_lines.append("*Base sur les principes Lean et le livre 'Learning to See' de Rother & Shook*")
+    report_md = "\n".join(report_lines)
     st.markdown(report_md)
     col_exp1, col_exp2 = st.columns(2)
     with col_exp1:
